@@ -1,0 +1,135 @@
+@import "tailwindcss";
+@import "../styles/tokens.css";
+@import "lenis/dist/lenis.css";
+
+@layer base {
+  html {
+    background: var(--color-bg);
+    color: var(--color-fg);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    min-height: 100svh;
+    overflow-x: clip;
+  }
+
+  ::selection {
+    background: var(--color-fg);
+    color: var(--color-bg);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+}
+
+/*
+ * Pre-hydration hidden state for scroll reveals. Only applies when JS is
+ * running (html.js is set by an inline script) and motion is allowed, so
+ * no-JS and reduced-motion users always see content. Opacity only: no CLS.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  html.js [data-reveal],
+  html.js [data-split]:not([data-split="lcp"]) {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: no-preference) and (min-width: 768px) {
+  html.js [data-split="lcp"] {
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: no-preference) and (max-width: 767px) {
+  [data-split="lcp"] {
+    animation: lcp-in var(--duration-reveal) var(--ease-out) 0.1s both;
+  }
+}
+@keyframes lcp-in {
+  from {
+    opacity: 0.01;
+    transform: translateY(0.35em);
+  }
+}
+
+/* SplitText line masks */
+.split-line-mask {
+  padding-bottom: 0.08em;
+  margin-bottom: -0.08em;
+}
+
+/* Custom cursor hides the native one only once it's active */
+html.has-cursor,
+html.has-cursor a,
+html.has-cursor button {
+  cursor: none;
+}
+
+/* ---------- Page transitions (React <ViewTransition>) ---------- */
+
+::view-transition {
+  pointer-events: none;
+}
+
+::view-transition-group(site-header) {
+  animation: none;
+  z-index: 100;
+}
+::view-transition-old(site-header) {
+  display: none;
+}
+::view-transition-new(site-header) {
+  animation: none;
+}
+
+::view-transition-old(.page-forward),
+::view-transition-old(.page-back) {
+  animation: var(--duration-base) var(--ease-in) both vt-page-out;
+}
+::view-transition-new(.page-forward) {
+  --vt-offset: 4vh;
+  animation: var(--duration-slow) var(--ease-out) calc(var(--duration-base) * 0.6) both vt-page-in;
+}
+::view-transition-new(.page-back) {
+  --vt-offset: -4vh;
+  animation: var(--duration-slow) var(--ease-out) calc(var(--duration-base) * 0.6) both vt-page-in;
+}
+
+@keyframes vt-page-out {
+  to {
+    opacity: 0;
+    transform: scale(0.985);
+  }
+}
+@keyframes vt-page-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--vt-offset));
+    clip-path: inset(100% 0 0 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(*),
+  ::view-transition-new(*),
+  ::view-transition-group(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+  }
+
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
