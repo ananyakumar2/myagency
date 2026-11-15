@@ -1,0 +1,85 @@
+/*
+ * Design tokens: the single source of truth for brand values.
+ *
+ * Everything in @theme becomes both a CSS variable on :root and a Tailwind
+ * utility (e.g. --color-fg → `text-fg`, --text-display → `text-display`,
+ * --ease-out → `ease-out`). GSAP reads the --ease-* curves at runtime
+ * (src/lib/motion/ease.ts), so changing a curve here changes it everywhere.
+ *
+ * Tailwind's default palette/type scale are cleared so only brand tokens exist.
+ */
+@theme static {
+  --color-*: initial;
+  --font-*: initial;
+  --text-*: initial;
+  --ease-*: initial;
+
+  /* Color: neutral grayscale placeholders */
+  --color-bg: #f4f4f2;
+  --color-surface: #e7e7e4;
+  --color-surface-strong: #d4d4d0;
+  --color-fg: #141414;
+  --color-fg-muted: #5c5c5a;
+  --color-border: #c8c8c4;
+  --color-accent: #141414;
+  --color-accent-fg: #f4f4f2;
+  --color-focus: #2b6cff;
+  --color-white: #fff;
+  --color-black: #000;
+  --color-transparent: transparent;
+  --color-current: currentColor;
+
+  /* Typography: system stack until the brand typeface is chosen */
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  /* Fluid type scale (min @ 375px → max @ 1440px) */
+  --text-xs: clamp(0.75rem, 0.73rem + 0.09vw, 0.8125rem);
+  --text-sm: clamp(0.875rem, 0.85rem + 0.12vw, 0.9375rem);
+  --text-base: clamp(1rem, 0.96rem + 0.19vw, 1.125rem);
+  --text-lg: clamp(1.125rem, 1.06rem + 0.28vw, 1.3125rem);
+  --text-xl: clamp(1.375rem, 1.24rem + 0.56vw, 1.75rem);
+  --text-2xl: clamp(1.75rem, 1.49rem + 1.13vw, 2.5rem);
+  --text-3xl: clamp(2.25rem, 1.8rem + 1.97vw, 3.75rem);
+  --text-4xl: clamp(2.75rem, 1.97rem + 3.38vw, 5.5rem);
+  --text-display: clamp(3.25rem, 1.9rem + 5.63vw, 8rem);
+
+  --leading-tight: 1.02;
+  --leading-snug: 1.2;
+  --leading-normal: 1.5;
+  --tracking-tight: -0.035em;
+  --tracking-wide: 0.08em;
+
+  /* Spacing: Tailwind's 0.25rem step scale plus named layout rhythm */
+  --spacing: 0.25rem;
+  --spacing-section: clamp(5rem, 3rem + 8vw, 11rem);
+  --spacing-gutter: clamp(1.25rem, 0.8rem + 2vw, 3rem);
+  --container-page: 90rem;
+
+  --radius-sm: 0.25rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1.5rem;
+
+  /*
+   * Motion. Cubic-bezier only, so CSS and GSAP share the exact curve.
+   * Defaults are deliberately calm: long decelerations, no overshoot/bounce.
+   */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.76, 0, 0.24, 1);
+  --ease-in: cubic-bezier(0.55, 0, 0.75, 0.2);
+  --ease-soft: cubic-bezier(0.33, 0.85, 0.4, 1);
+}
+
+:root {
+  /* Durations; GSAP reads these via duration() in src/lib/motion/ease.ts */
+  --duration-fast: 300ms;
+  --duration-base: 700ms;
+  --duration-slow: 1200ms;
+  --duration-reveal: 1600ms;
+
+  /* Global multiplier for parallax travel */
+  --parallax-strength: 0.8;
+
+  --z-header: 50;
+  --z-cursor: 100;
+}
