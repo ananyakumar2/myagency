@@ -1,6 +1,7 @@
 /* eslint-disable @next/next/no-img-element -- lab stand-in for a case study */
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
 
 import { PageTransition, TransitionLink } from "@/components/motion/page-transition";
 import { getProject, PROJECTS } from "@/components/showcase/projects";
@@ -15,7 +16,15 @@ export async function generateMetadata({ params }: PageProps<"/lab/work/[slug]">
 }
 
 /** Stand-in for the case study the showcase's second click opens. */
-export default async function LabWorkPage({ params }: PageProps<"/lab/work/[slug]">) {
+export default function LabWorkPage({ params }: PageProps<"/lab/work/[slug]">) {
+  return (
+    <Suspense fallback={<div className="min-h-svh" />}>
+      <CaseStudy params={params} />
+    </Suspense>
+  );
+}
+
+async function CaseStudy({ params }: Pick<PageProps<"/lab/work/[slug]">, "params">) {
   const { slug } = await params;
   const project = getProject(slug);
   if (!project) notFound();

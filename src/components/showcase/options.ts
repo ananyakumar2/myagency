@@ -21,9 +21,9 @@ export const OPTIONS: ShowcaseOption[] = [
   {
     n: 2,
     name: "The Ring",
-    idea: "Eight panels on a slowly turning carousel seen from just above, so the work reads as one object rather than a list.",
-    perProject: "Two panels: the hero and a second view. The front project's name, line and index sit under the ring.",
-    fullness: "Two panels per project close the ring; the far side shows through dimmed, so there is always depth behind the front card.",
+    idea: "Twelve tall panels on a slowly turning carousel seen from just above, so the work reads as one object rather than a list.",
+    perProject: "Three panels: the hero, a second view and a close crop. The front project's name, line and index sit under the ring.",
+    fullness: "Three panels per project close the ring; the far side shows through dimmed, so there is always depth behind the front card.",
     inspiredBy: "Agrumea's jar ring and colour crossfade, Grail's helix field.",
     interactions: "Scroll, drag or throw to turn; panels bow sideways with turning speed. When left alone it turns one panel in a quick burst that eases out long. First click turns a side panel to the front, second opens.",
   },

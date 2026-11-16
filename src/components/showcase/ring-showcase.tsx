@@ -75,8 +75,10 @@ function Ring() {
       };
 
       // Idle motion in bursts (answer 5): a quick one-panel turn that eases out long, then a rest.
+      // Paused under the pointer so a panel never slides away from a click.
+      let hovering = false;
       const idle = () => {
-        if (inView && gsap.ticker.time - lastInput > IDLE_AFTER) {
+        if (inView && !hovering && gsap.ticker.time - lastInput > IDLE_AFTER) {
           drift?.kill();
           const snapped = Math.round((m.scroll + m.offset) / STEP) * STEP - m.scroll;
           drift = gsap.to(m, { offset: snapped - STEP, duration: 1.8, ease: "expo.out" });
@@ -121,6 +123,10 @@ function Ring() {
           e.stopPropagation();
         }
       };
+      const enter = () => (hovering = true);
+      const leave = () => (hovering = false);
+      stage.addEventListener("pointerenter", enter);
+      stage.addEventListener("pointerleave", leave);
       stage.addEventListener("pointerdown", down);
       window.addEventListener("pointermove", move);
       window.addEventListener("pointerup", up);
@@ -162,6 +168,8 @@ function Ring() {
         drift?.kill();
         window.clearInterval(idleTimer);
         gsap.ticker.remove(tick);
+        stage.removeEventListener("pointerenter", enter);
+        stage.removeEventListener("pointerleave", leave);
         stage.removeEventListener("pointerdown", down);
         window.removeEventListener("pointermove", move);
         window.removeEventListener("pointerup", up);
@@ -194,7 +202,7 @@ function Ring() {
       <div
         data-ring-stage
         data-cursor-label="Drag"
-        className="absolute inset-x-0 top-[7svh] h-[72svh] cursor-grab touch-pan-y select-none active:cursor-grabbing [--h:min(54svh,calc(var(--w)*0.92))] [--r:calc(var(--w)*1.866)] [--w:clamp(14rem,26vw,30rem)]"
+        className="absolute inset-x-0 top-[7svh] h-[72svh] cursor-grab touch-pan-y select-none active:cursor-grabbing [--h:min(58svh,calc(var(--w)*1.3))] [--r:calc(var(--w)*1.866)] [--w:clamp(12rem,24vw,28rem)]"
         style={{ perspective: "2000px", perspectiveOrigin: "50% 38%" }}
       >
         <div className="absolute top-1/2 left-1/2" style={{ transformStyle: "preserve-3d", transform: "rotateX(-4deg)" }}>

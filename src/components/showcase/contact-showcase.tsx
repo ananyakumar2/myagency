@@ -124,7 +124,7 @@ function ContactSheet() {
   return (
     <section ref={section} aria-label="Selected work" className="relative h-svh overflow-hidden bg-bg text-fg">
       <div ref={track} className="flex h-full w-max will-change-transform">
-        <div className="flex h-full w-[34vw] shrink-0 flex-col justify-end px-gutter pb-[10svh]">
+        <div className="flex h-full w-[46vw] shrink-0 flex-col justify-start px-gutter pt-[18svh]">
           <p className="font-mono text-xs tracking-wide text-fg-muted uppercase">Selected work · {pad(PROJECTS.length)}</p>
           <p className="mt-4 max-w-[18ch] text-3xl leading-tight font-medium tracking-tight">
             Four projects, laid out like a contact sheet.
