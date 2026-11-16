@@ -7,7 +7,7 @@ import { getLab, LABS } from "@/components/lab/labs";
 import { TuningPanel } from "@/components/lab/tuning-panel";
 
 export function generateStaticParams() {
-  return LABS.map((l) => ({ effect: l.slug }));
+  return LABS.filter((l) => l.slug !== "cubes").map((l) => ({ effect: l.slug }));
 }
 
 export async function generateMetadata({ params }: PageProps<"/lab/[effect]">): Promise<Metadata> {
