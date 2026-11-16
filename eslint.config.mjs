@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Vendored three.js KTX2 transcoder.
+    "public/basis/**",
   ]),
 ]);
 
