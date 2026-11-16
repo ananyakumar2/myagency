@@ -17,8 +17,8 @@
   }
 
   ::selection {
-    background: var(--color-fg);
-    color: var(--color-bg);
+    background: var(--color-signature);
+    color: var(--color-ink);
   }
 
   :focus-visible {
@@ -62,11 +62,41 @@
   margin-bottom: -0.08em;
 }
 
-/* Custom cursor hides the native one only once it's active */
-html.has-cursor,
-html.has-cursor a,
-html.has-cursor button {
-  cursor: none;
+/*
+ * DOM-to-WebGL mirror. While the GL copy is live the page ground comes from
+ * the canvas, mirrored text and media go transparent (still in the
+ * accessibility tree), and mirrored blocks hide only their own paint.
+ */
+html.mirror-on,
+html.mirror-on body {
+  background: transparent;
+}
+html.mirror-on [data-mirror-root] [data-mirror="block"] > * {
+  visibility: visible;
+}
+html.mirror-on [data-mirror-root] [data-mirror="block"] {
+  visibility: hidden;
+}
+html.mirror-on [data-mirror-root] [data-mirror="text"],
+html.mirror-on [data-mirror-root] [data-mirror="image"] {
+  opacity: 0 !important;
+}
+
+/* Press states (decision 14): Grail's lift, scale and dip */
+[data-press] {
+  transition:
+    translate var(--press-duration, 0.15s) var(--ease-card),
+    scale var(--press-duration, 0.15s) var(--ease-card);
+}
+@media (hover: hover) and (pointer: fine) {
+  [data-press]:hover {
+    translate: 0 calc(var(--press-lift, 2px) * -1);
+    scale: var(--press-hover, 1.03);
+  }
+}
+[data-press]:active {
+  translate: 0 0;
+  scale: var(--press-down, 0.99);
 }
 
 /* ---------- Page transitions (React <ViewTransition>) ---------- */
