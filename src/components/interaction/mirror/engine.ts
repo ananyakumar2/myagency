@@ -687,6 +687,9 @@ export class MirrorEngine implements MirrorHandle {
     gl.uniform1i(u.uTex, 0);
     gl.uniform1f(u.uAxis, 0);
     gl.activeTexture(gl.TEXTURE0);
+    // The post pass leaves the scene texture bound; a colour block drawn into the scene FBO
+    // before any item binds its own texture would be a feedback loop, which WebGL drops.
+    gl.bindTexture(gl.TEXTURE_2D, null);
 
     const margin = 160;
     const ease = damp(0.16, this.dt);
