@@ -242,13 +242,15 @@ function Field({ state, words, universes, faces, faceSize }: SceneProps) {
   // R3F renders from GSAP's ticker, the same beat as Lenis and the mirror.
   useEffect(() => {
     const stop = startPointer();
-    const tick = (time: number) => get().advance(time * 1000);
+    const tick = (time: number) => {
+      if (state.visible) get().advance(time * 1000);
+    };
     gsap.ticker.add(tick);
     return () => {
       gsap.ticker.remove(tick);
       stop();
     };
-  }, [get]);
+  }, [get, state]);
 
   const liveRef = useRef({ tilt: { yaw: 0, pitch: 0 } as Tilt, hovered: -1, nextAmbient: 0.8, slot: 1, rand: rng(7) });
   const reduced = useMemo(() => prefersReducedMotion(), []);
