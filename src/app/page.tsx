@@ -4,8 +4,8 @@ import { Parallax, ParallaxMedia } from "@/components/motion/parallax";
 import { HorizontalScroll, PinnedSteps } from "@/components/motion/pinned";
 import { Reveal } from "@/components/motion/reveal";
 import { SplitReveal } from "@/components/motion/split-reveal";
+import { HomeHero } from "@/components/site/home-hero";
 import { PlaceholderMedia } from "@/components/site/placeholder-media";
-import { HeroCanvas } from "@/components/three/hero-canvas";
 
 const label = "font-mono text-xs tracking-wide text-fg-muted uppercase";
 
@@ -20,45 +20,8 @@ const projects = [
 export default function Home() {
   return (
     <PageTransition>
-      {/* 1. Hero: line reveal, layered parallax, 3D canvas, magnetic CTA */}
-      <section className="relative grid min-h-svh items-end overflow-hidden px-gutter pt-32 pb-16 md:pb-24">
-        <Parallax
-          speed={0.5}
-          className="absolute inset-x-0 top-16 -z-10 h-[55svh] md:inset-y-0 md:left-[38%] md:h-auto"
-          innerClassName="h-full"
-        >
-          <HeroCanvas className="h-full w-full" />
-        </Parallax>
-        <div className="mx-auto w-full max-w-page">
-          <Reveal variant="fade" immediate delay={0.2} className={`${label} mb-6`}>
-            Placeholder studio — Interaction demo
-          </Reveal>
-          <SplitReveal
-            as="h1"
-            immediate
-            lcp
-            delay={0.3}
-            className="max-w-[14ch] text-display leading-tight font-medium tracking-tight"
-          >
-            Quiet motion for considered brands.
-          </SplitReveal>
-          <div className="mt-10 flex flex-wrap items-center gap-6">
-            <Reveal variant="up" immediate delay={0.9}>
-              <Magnetic>
-                <a
-                  href="#contact"
-                  className="inline-flex h-14 items-center rounded-full bg-accent px-8 text-sm font-medium text-accent-fg"
-                >
-                  Start a project
-                </a>
-              </Magnetic>
-            </Reveal>
-            <Reveal variant="fade" immediate delay={1.2} className="text-sm text-fg-muted">
-              Scroll to explore ↓
-            </Reveal>
-          </div>
-        </div>
-      </section>
+      {/* 1. Hero: colour-cycling field, letter push, scramble bursts, 3D canvas, curtain CTA */}
+      <HomeHero />
 
       {/* 2. Scroll-triggered reveal: staggered fade/translate */}
       <section className="px-gutter py-section">
