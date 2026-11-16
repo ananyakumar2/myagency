@@ -376,7 +376,7 @@ export const watchdogTuning = defineTuning(
   { slowMs: 100, slowFrames: 8, jankMs: 32, jankRatio: 0.22, window: 120, fade: 0.35 },
   {
     slowMs: { min: 40, max: 400, step: 5, unit: "ms", label: "A slow frame is over" },
-    slowFrames: { min: 1, max: 40, step: 1, label: "Retreat after slow frames" },
+    slowFrames: { min: 1, max: 40, step: 1, label: "Retreat after slow frames in the window" },
     jankMs: { min: 17, max: 80, step: 1, unit: "ms", label: "A janky frame is over" },
     jankRatio: { min: 0.05, max: 0.8, step: 0.01, label: "Retreat when janky share is over" },
     window: { min: 30, max: 600, step: 10, label: "Frames sampled" },

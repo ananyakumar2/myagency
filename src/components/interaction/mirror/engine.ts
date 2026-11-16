@@ -113,7 +113,6 @@ export class MirrorEngine implements MirrorHandle {
   private shocks: Shock[] = [];
   private frames = 0;
   private samples: number[] = [];
-  private slow = 0;
   private running = false;
   private destroyed = false;
   private readyFired = false;
@@ -463,7 +462,6 @@ export class MirrorEngine implements MirrorHandle {
 
   private onVisibility = () => {
     this.samples.length = 0;
-    this.slow = 0;
     this.lastScroll = window.scrollY;
   };
 
@@ -477,11 +475,12 @@ export class MirrorEngine implements MirrorHandle {
     const p = watchdogTuning.params;
     this.samples.push(deltaMs);
     if (this.samples.length > p.window) this.samples.shift();
-    if (deltaMs > p.slowMs) this.slow++;
+    // Slow frames count within the same rolling window, so a long session can't add up to a retreat.
+    const slow = this.samples.filter((d) => d > p.slowMs).length;
     const janky = this.samples.filter((d) => d > p.jankMs).length / this.samples.length;
     const avg = this.samples.reduce((a, b) => a + b, 0) / this.samples.length;
     this.state.fps = Math.round(1000 / Math.max(avg, 1));
-    if (this.slow >= p.slowFrames) this.retreat(`${this.slow} frames over ${p.slowMs} ms`);
+    if (slow >= p.slowFrames) this.retreat(`${slow} of the last ${this.samples.length} frames over ${p.slowMs} ms`);
     else if (this.samples.length >= p.window && janky > p.jankRatio)
       this.retreat(`${Math.round(janky * 100)}% of frames over ${p.jankMs} ms`);
   }
