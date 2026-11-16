@@ -56,22 +56,32 @@ void main(){
   gl_FragColor = vec4(col*alpha, alpha);
 }`;
 
-function palette(color: string) {
-  const [r, g, b] = parseColor(color);
+/**
+ * Grail derives its far tone with fixed channel weights tuned for its own
+ * inks; on our pinks and saffrons that drifts to purple. Ours mixes a third of the way
+ * toward the colour's deep partner (or darkens in place), so the ink stays
+ * in the palette and the ground stays light.
+ */
+function palette(color: string, deep?: string) {
+  const base = parseColor(color).slice(0, 3);
+  const far = deep ? parseColor(deep).slice(0, 3) : base.map((c) => c * 0.72);
   return {
-    bright: [Math.min(r + 0.02, 1), Math.min(g + 0.1, 1), Math.min(b + 0.02, 1)],
-    base: [r, g, b],
-    deep: [r * 0.6, g * 0.34, Math.min(b * 0.95 + 0.05, 1)],
+    bright: base.map((c) => c + (1 - c) * 0.35),
+    base,
+    deep: base.map((c, i) => c + (far[i]! - c) * 0.35),
   };
 }
 
 export function InkReveal({
   color = "#ffcbc5",
+  deep,
   origin = [0.12, 0.92],
   className = "",
   children,
 }: {
   color?: string;
+  /** The colour's deep partner, for the far edge of the ink. */
+  deep?: string;
   origin?: [number, number];
   className?: string;
   children: ReactNode;
@@ -121,7 +131,7 @@ export function InkReveal({
       base: u("uBase"),
       deep: u("uDeep"),
     };
-    const pal = palette(color);
+    const pal = palette(color, deep);
 
     let progress = 0;
     let time = 0;
@@ -181,7 +191,7 @@ export function InkReveal({
       io.disconnect();
       gl.getExtension("WEBGL_lose_context")?.loseContext();
     };
-  }, [color, ox, oy]);
+  }, [color, deep, ox, oy]);
 
   return (
     <section ref={section} className={`relative overflow-hidden ${className}`}>

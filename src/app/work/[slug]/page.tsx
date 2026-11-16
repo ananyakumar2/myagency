@@ -75,7 +75,7 @@ export default async function CaseStudy({ params }: PageProps<"/work/[slug]">) {
           </div>
         </Sheet>
 
-        <InkReveal color={project.field} className="relative z-(--z-content) min-h-svh">
+        <InkReveal color={project.field} deep={project.deep} className="relative z-(--z-content) min-h-svh">
           <div className="flex min-h-svh items-center px-gutter">
             <p className="mx-auto max-w-page text-display leading-tight font-medium tracking-tight" style={{ color: project.deep }}>
               One idea, carried all the way through.

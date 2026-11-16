@@ -344,7 +344,7 @@ function TransitionsDemo() {
         <p className={label}>Sheet, tilted from the left</p>
         <p className="mt-4 max-w-[20ch] text-4xl font-medium tracking-tight">Sections slide up like sheets laid on a table, a few degrees off true.</p>
       </Sheet>
-      <InkReveal color={next.field} className="min-h-[90svh]">
+      <InkReveal color={next.field} deep={next.deep} className="min-h-[90svh]">
         <div className="grid min-h-[90svh] content-center px-gutter">
           <p className="max-w-[18ch] text-4xl leading-[1.05] font-medium tracking-tight">Ink spreads from the corner, then the words settle in.</p>
         </div>
