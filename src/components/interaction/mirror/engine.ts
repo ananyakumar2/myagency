@@ -21,8 +21,10 @@ import { ITEM_FRAG, ITEM_VERT, POST_FRAG, POST_VERT } from "./shaders";
  *   data-mirror="image"   <img>, <video> or <canvas>, honouring object-fit
  *   data-mirror-live      re-read colours every frame (hover fills)
  *   data-mirror-clip      clips mirrored descendants (overflow-hidden frames)
- *   data-mirror-3d        the element sits inside CSS 3D transforms: its
- *                         projected corners are read from four probes
+ *   data-mirror-3d        the element sits inside CSS 3D transforms (or 2D
+ *                         rotation): its projected corners are read from
+ *                         four probes. Media, blocks and text; a block or
+ *                         text element must be positioned for its probes
  *
  * Per-element bend, zoom and frame source come from bindMirror() (bus.ts).
  */
@@ -73,6 +75,55 @@ function compile(gl: WebGL2RenderingContext, vs: string, fs: string, names: stri
   const uniforms: Uniforms = {};
   for (const n of names) uniforms[n] = gl.getUniformLocation(program, n);
   return { program, uniforms };
+}
+
+/** The probes' client positions as a quad: TL, TR, BR, BL (x, y pairs). */
+function probeQuad(probes: HTMLElement[]) {
+  return probes.flatMap((p) => {
+    const r = p.getBoundingClientRect();
+    return [r.left, r.top];
+  });
+}
+
+/**
+ * Unit-square-to-quad homography (Heckbert), column-major into `out`, so
+ * texture interpolation is perspective-correct. False for back-facing or
+ * degenerate quads.
+ */
+function quadHomography(q: number[], out: Float32Array) {
+  const [x0, y0, x1, y1, x2, y2, x3, y3] = q;
+  const area = (x1 - x0) * (y2 - y0) - (x2 - x0) * (y1 - y0) + (x2 - x0) * (y3 - y0) - (x3 - x0) * (y2 - y0);
+  if (!(area > 1)) return false;
+  const dx1 = x1 - x2, dx2 = x3 - x2, dx3 = x0 - x1 + x2 - x3;
+  const dy1 = y1 - y2, dy2 = y3 - y2, dy3 = y0 - y1 + y2 - y3;
+  let g = 0, h = 0;
+  if (Math.abs(dx3) > 1e-6 || Math.abs(dy3) > 1e-6) {
+    const den = dx1 * dy2 - dx2 * dy1;
+    if (Math.abs(den) < 1e-9) return false;
+    g = (dx3 * dy2 - dx2 * dy3) / den;
+    h = (dx1 * dy3 - dx3 * dy1) / den;
+  }
+  out[0] = x1 - x0 + g * x1; out[1] = y1 - y0 + g * y1; out[2] = g;
+  out[3] = x3 - x0 + h * x3; out[4] = y3 - y0 + h * y3; out[5] = h;
+  out[6] = x0; out[7] = y0; out[8] = 1;
+  return true;
+}
+
+function applyHomography(m: Float32Array, u: number, v: number): [number, number] {
+  const w = m[2] * u + m[5] * v + m[8];
+  return [(m[0] * u + m[3] * v + m[6]) / w, (m[1] * u + m[4] * v + m[7]) / w];
+}
+
+function invertHomography(m: Float32Array) {
+  // Row-major view of the column-major matrix.
+  const [r0, r3, r6, r1, r4, r7, r2, r5, r8] = m;
+  const i00 = r4 * r8 - r5 * r7, i01 = r2 * r7 - r1 * r8, i02 = r1 * r5 - r2 * r4;
+  const i10 = r5 * r6 - r3 * r8, i11 = r0 * r8 - r2 * r6, i12 = r2 * r3 - r0 * r5;
+  const i20 = r3 * r7 - r4 * r6, i21 = r1 * r6 - r0 * r7, i22 = r0 * r4 - r1 * r3;
+  const det = r0 * i00 + r1 * i10 + r2 * i20;
+  if (Math.abs(det) < 1e-12) return null;
+  const k = 1 / det;
+  return new Float32Array([i00 * k, i10 * k, i20 * k, i01 * k, i11 * k, i21 * k, i02 * k, i12 * k, i22 * k]);
 }
 
 export type MirrorEngineOptions = {
@@ -407,8 +458,12 @@ export class MirrorEngine implements MirrorHandle {
 
   private prepareText(it: Item, rect: DOMRect) {
     if (!it.dirty && !it.live) return;
-    if (it.live && !it.dirty && it.raster && textSignature(it.el, rect) === it.raster.signature) return;
-    const raster = rasterizeText(it.el, this.ratio, it.rasterCanvas ?? undefined);
+    // In 3D the raster is in the element's own space, so its size is the layout box, not the projected one.
+    const box = it.probes ? new DOMRect(0, 0, it.el.offsetWidth, it.el.offsetHeight) : rect;
+    if (it.live && !it.dirty && it.raster && textSignature(it.el, box) === it.raster.signature) return;
+    const local = it.probes ? this.localMapper(it) : undefined;
+    if (it.probes && !local) return;
+    const raster = rasterizeText(it.el, this.ratio, it.rasterCanvas ?? undefined, local);
     it.dirty = false;
     if (!raster) return;
     it.raster = raster;
@@ -564,25 +619,44 @@ export class MirrorEngine implements MirrorHandle {
    * perspective-correct. Returns false for back-facing or degenerate quads.
    */
   private placeProjected(probes: HTMLElement[]) {
-    const pts = probes.map((p) => p.getBoundingClientRect());
-    const [x0, y0, x1, y1, x2, y2, x3, y3] = [pts[0].left, pts[0].top, pts[1].left, pts[1].top, pts[2].left, pts[2].top, pts[3].left, pts[3].top];
-    const area = (x1 - x0) * (y2 - y0) - (x2 - x0) * (y1 - y0) + (x2 - x0) * (y3 - y0) - (x3 - x0) * (y2 - y0);
-    if (!(area > 1)) return false;
-    const dx1 = x1 - x2, dx2 = x3 - x2, dx3 = x0 - x1 + x2 - x3;
-    const dy1 = y1 - y2, dy2 = y3 - y2, dy3 = y0 - y1 + y2 - y3;
-    let g = 0, h = 0;
-    if (Math.abs(dx3) > 1e-6 || Math.abs(dy3) > 1e-6) {
-      const den = dx1 * dy2 - dx2 * dy1;
-      if (Math.abs(den) < 1e-9) return false;
-      g = (dx3 * dy2 - dx2 * dy3) / den;
-      h = (dx1 * dy3 - dx3 * dy1) / den;
-    }
-    const m = this.mat;
-    m[0] = x1 - x0 + g * x1; m[1] = y1 - y0 + g * y1; m[2] = g;
-    m[3] = x3 - x0 + h * x3; m[4] = y3 - y0 + h * y3; m[5] = h;
-    m[6] = x0; m[7] = y0; m[8] = 1;
-    this.gl.uniformMatrix3fv(this.item.uniforms.uMat, false, m);
+    if (!quadHomography(probeQuad(probes), this.mat)) return false;
+    this.gl.uniformMatrix3fv(this.item.uniforms.uMat, false, this.mat);
     return true;
+  }
+
+  /**
+   * Text inside CSS 3D: the raster is drawn in the element's own space and its
+   * padded box is placed on the quad the probes' homography extends to.
+   */
+  private placeProjectedText(it: Item, r: TextRaster) {
+    const m = this.mat;
+    if (!quadHomography(probeQuad(it.probes!), m)) return false;
+    const w = it.el.offsetWidth || 1;
+    const h = it.el.offsetHeight || 1;
+    const [u0, v0, u1, v1] = [r.offsetX / w, r.offsetY / h, (r.offsetX + r.width) / w, (r.offsetY + r.height) / h];
+    const quad = [...applyHomography(m, u0, v0), ...applyHomography(m, u1, v0), ...applyHomography(m, u1, v1), ...applyHomography(m, u0, v1)];
+    if (!quadHomography(quad, m)) return false;
+    this.gl.uniformMatrix3fv(this.item.uniforms.uMat, false, m);
+    this.gl.uniform2f(this.item.uniforms.uSize, r.width, r.height);
+    return true;
+  }
+
+  /** Maps a client point into the element's own box (CSS px), through its probes. */
+  private localMapper(it: Item) {
+    const m = new Float32Array(9);
+    if (!it.probes || !quadHomography(probeQuad(it.probes), m)) return undefined;
+    const inv = invertHomography(m);
+    if (!inv) return undefined;
+    const w = it.el.offsetWidth;
+    const h = it.el.offsetHeight;
+    return {
+      width: w,
+      height: h,
+      toLocal: (x: number, y: number): [number, number] => {
+        const [u, v] = applyHomography(inv, x, y);
+        return [u * w, v * h];
+      },
+    };
   }
 
   private drawItem(bend: number) {
@@ -613,6 +687,9 @@ export class MirrorEngine implements MirrorHandle {
     gl.uniform1i(u.uTex, 0);
     gl.uniform1f(u.uAxis, 0);
     gl.activeTexture(gl.TEXTURE0);
+    // The post pass leaves the scene texture bound; a colour block drawn into the scene FBO
+    // before any item binds its own texture would be a feedback loop, which WebGL drops.
+    gl.bindTexture(gl.TEXTURE_2D, null);
 
     const margin = 160;
     const ease = damp(0.16, this.dt);
@@ -644,7 +721,10 @@ export class MirrorEngine implements MirrorHandle {
         if (it.color[3] <= 0) continue;
         gl.uniform1i(u.uMode, 0);
         gl.uniform4fv(u.uColor, it.color);
-        this.placeBox(rect.left, rect.top, rect.width, rect.height);
+        if (it.probes) {
+          if (!this.placeProjected(it.probes)) continue;
+          gl.uniform2f(u.uSize, it.el.offsetWidth, it.el.offsetHeight);
+        } else this.placeBox(rect.left, rect.top, rect.width, rect.height);
         gl.uniform1f(u.uRadius, it.radius);
         this.drawItem(0);
         continue;
@@ -657,6 +737,11 @@ export class MirrorEngine implements MirrorHandle {
         gl.bindTexture(gl.TEXTURE_2D, it.tex);
         gl.uniform1i(u.uMode, 1);
         gl.uniform4f(u.uUvRect, 0, 0, 1, 1);
+        gl.uniform1f(u.uRadius, 0);
+        if (it.probes) {
+          if (this.placeProjectedText(it, r)) this.drawItem(0);
+          continue;
+        }
         // Scale the raster with the element so GSAP scale tweens still read.
         const sx = rect.width / (r.width + 2 * r.offsetX);
         const sy = rect.height / (r.height + 2 * r.offsetY);

@@ -23,6 +23,7 @@ export const LABS: Lab[] = [
   { slug: "helmet", title: "Helmet", decisions: "21, 23, 24", blurb: "Ananya's Jack Johns method: a meshopt + KTX2 GLB that turns toward the cursor, rendering only while it moves.", sets: ["helmet"] },
   { slug: "springs", title: "Springs", decisions: "10, 22", blurb: "Agrumea's springs: objects turn 10°, lean 3° and lift 3% toward the cursor, each on its own spring.", sets: ["springs"] },
   { slug: "torch", title: "Section torch", decisions: "10", blurb: "The deep sections' one response: a warm light that follows the cursor.", sets: ["torch"] },
+  { slug: "cubes", title: "Cubes", decisions: "proposal", blurb: "A terraced crater of cubes scrubbed by scroll: layers slide, the camera swings and rolls, then it all lies flat. Words or universes on the faces; snap optional.", sets: [] },
   { slug: "colour", title: "Colour", decisions: "25-34", blurb: "The proposed palette, field themes, the colour-cycling hero and the signature accent switch.", sets: ["colour", "hero"] },
 ];
 

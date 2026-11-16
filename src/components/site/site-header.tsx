@@ -22,9 +22,16 @@ export function SiteHeader() {
         <ul className="flex items-center gap-1">
           <li>
             <Magnetic>
-              <CurtainLink href="/work" curtainTitle="Work" className="block px-3 py-2">
+              <Link href="/#work" className="block px-3 py-2">
                 Work
-              </CurtainLink>
+              </Link>
+            </Magnetic>
+          </li>
+          <li>
+            <Magnetic>
+              <Link href="/#studio" className="block px-3 py-2">
+                Studio
+              </Link>
             </Magnetic>
           </li>
           <li>
