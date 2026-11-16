@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { PageTransition } from "@/components/motion/page-transition";
+import { DeckVariantNav } from "@/components/showcase/deck/deck-variants";
 import { OptionNav } from "@/components/showcase/lab-shell";
 
 export const metadata: Metadata = { title: "Work showcase options" };
@@ -20,6 +21,15 @@ export default function ShowcaseIndex() {
         <div className="mt-16">
           <OptionNav />
         </div>
+        <section className="mt-24">
+          <p className="font-mono text-xs tracking-wide text-fg-muted uppercase">Chosen: the Deck</p>
+          <h2 className="mt-4 max-w-[28ch] text-2xl leading-tight font-medium tracking-tight">
+            Each sheet with the project alive on a laptop and a phone — three ways.
+          </h2>
+          <div className="mt-8">
+            <DeckVariantNav />
+          </div>
+        </section>
       </div>
     </PageTransition>
   );

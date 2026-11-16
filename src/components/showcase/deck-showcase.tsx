@@ -2,14 +2,14 @@
 
 /* eslint-disable @next/next/no-img-element -- lab prototype */
 
-import { useRef, useState } from "react";
+import { type ComponentType, useCallback, useRef, useState } from "react";
 
 import { useReducedMotion } from "@/hooks/use-media-query";
 import { gsap, ScrollTrigger, useGSAP } from "@/lib/motion/gsap";
 
 import { BowImage } from "./bow-image";
 import { CentreLink } from "./centre-link";
-import { PROJECTS, pad, projectHref } from "./projects";
+import { PROJECTS, type ShowcaseProject, pad, projectHref } from "./projects";
 import { StaticShowcase } from "./static-showcase";
 import { usePinnedSteps } from "./use-pinned-steps";
 import { bendFrom, useScrollVelocity } from "./use-scroll-velocity";
@@ -20,12 +20,25 @@ const TILT = [0, -7, 5.5, -4.5];
 /** Sheets don't land perfectly square; a little resting skew keeps the pile physical. */
 const REST = [0, 0.8, -0.6, 0.5];
 
-export function DeckShowcase() {
+export type DeckHeroProps = {
+  project: ShowcaseProject;
+  /** True while this sheet is on top of the pile. */
+  active: boolean;
+  /** Deck progress, 0 … N-1. */
+  progress: () => number;
+};
+
+type DeckProps = {
+  /** Replaces the bent hero image in each sheet. */
+  Hero?: ComponentType<DeckHeroProps>;
+};
+
+export function DeckShowcase(props: DeckProps) {
   const reduced = useReducedMotion();
-  return reduced ? <StaticShowcase /> : <Deck />;
+  return reduced ? <StaticShowcase /> : <Deck {...props} />;
 }
 
-function Deck() {
+function Deck({ Hero }: DeckProps) {
   const section = useRef<HTMLElement>(null);
   const trigger = useRef<ScrollTrigger | null>(null);
   const progress = useRef(0);
@@ -79,6 +92,7 @@ function Deck() {
   );
 
   const bend = () => bendFrom(velocity.current, 0.005);
+  const getProgress = useCallback(() => progress.current, []);
 
   return (
     <section ref={section} aria-label="Selected work" className="relative h-svh overflow-hidden bg-bg">
@@ -103,11 +117,16 @@ function Deck() {
               </header>
 
               <div className="col-span-12 flex flex-col justify-end md:col-span-5">
-                <h3 className="text-display leading-[0.9] font-medium tracking-tight">{p.name}</h3>
+                <h3 className={`${Hero ? "text-[clamp(2.75rem,5.6vw,6rem)]" : "text-display"} leading-[0.9] font-medium tracking-tight`}>
+                  {p.name}
+                </h3>
                 <p className="mt-5 max-w-[34ch] text-lg leading-snug opacity-80">{p.line}</p>
               </div>
 
               <div className="relative col-span-12 row-span-2 mt-4 hidden md:col-span-7 md:block">
+                {Hero ? (
+                  <Hero project={p} active={active === k} progress={getProgress} />
+                ) : (
                 <BowImage
                   src={p.hero.src}
                   alt={p.hero.alt}
@@ -119,6 +138,7 @@ function Deck() {
                   priority={k === 0}
                   className="size-full"
                 />
+                )}
               </div>
 
               <ul className="col-span-12 mt-6 grid grid-cols-3 gap-3 md:col-span-5">
