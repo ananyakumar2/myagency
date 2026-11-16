@@ -14,15 +14,41 @@
   --text-*: initial;
   --ease-*: initial;
 
-  /* Color: neutral grayscale placeholders */
-  --color-bg: #f4f4f2;
-  --color-surface: #e7e7e4;
-  --color-surface-strong: #d4d4d0;
-  --color-fg: #141414;
-  --color-fg-muted: #5c5c5a;
-  --color-border: #c8c8c4;
-  --color-accent: #141414;
-  --color-accent-fg: #f4f4f2;
+  /*
+   * Palette (docs/reference-analysis.md → "Proposed colour system").
+   * Fields sit at OKLCH L≈0.89 C≈0.065 and carry ink type; deep tones sit at
+   * L≈0.45 C≈0.10 and carry paper type. Hues are starting points until the
+   * brand route is picked.
+   */
+  --color-paper: #f4f0e7;
+  --color-paper-2: #ece6da;
+  --color-ink: #14110e;
+  --color-ink-2: #4f4942;
+  --color-stone: #afaaa3;
+  --color-line: #d9d2c5;
+  --color-deep: #201111;
+  --color-deep-2: #2e1a19;
+
+  --color-saffron: #f5d5ab;
+  --color-saffron-deep: #754b00;
+  --color-sea: #a8e9e8;
+  --color-sea-deep: #006566;
+  --color-lacquer: #ffcbc5;
+  --color-lacquer-deep: #843c38;
+
+  /* Signature accent: cursor, route curtain, selection. Re-pointed per brand route. */
+  --color-signature: var(--color-saffron);
+  --color-signature-deep: var(--color-saffron-deep);
+
+  /* Semantic roles; [data-theme] blocks below remap these per section */
+  --color-bg: var(--color-paper);
+  --color-surface: var(--color-paper-2);
+  --color-surface-strong: #ddd5c6;
+  --color-fg: var(--color-ink);
+  --color-fg-muted: var(--color-ink-2);
+  --color-border: var(--color-line);
+  --color-accent: var(--color-ink);
+  --color-accent-fg: var(--color-paper);
   --color-focus: #2b6cff;
   --color-white: #fff;
   --color-black: #000;
@@ -62,24 +88,77 @@
 
   /*
    * Motion. Cubic-bezier only, so CSS and GSAP share the exact curve.
-   * Defaults are deliberately calm: long decelerations, no overshoot/bounce.
+   * out / in-out are Auge's expoOut / expoInOut (decision 3); card is the
+   * Agrumea/Grail hover curve.
    */
-  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
-  --ease-in-out: cubic-bezier(0.76, 0, 0.24, 1);
+  --ease-out: cubic-bezier(0.19, 1, 0.22, 1);
+  --ease-in-out: cubic-bezier(0.83, 0, 0.17, 1);
   --ease-in: cubic-bezier(0.55, 0, 0.75, 0.2);
   --ease-soft: cubic-bezier(0.33, 0.85, 0.4, 1);
+  --ease-card: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 :root {
   /* Durations; GSAP reads these via duration() in src/lib/motion/ease.ts */
   --duration-fast: 300ms;
-  --duration-base: 700ms;
+  --duration-hover: 600ms;
+  --duration-base: 900ms;
   --duration-slow: 1200ms;
   --duration-reveal: 1600ms;
 
   /* Global multiplier for parallax travel */
   --parallax-strength: 0.8;
 
+  --z-mirror: 0;
+  --z-content: 1;
   --z-header: 50;
-  --z-cursor: 100;
+  --z-curtain: 150;
+  --z-loader: 200;
+  --z-cursor: 300;
+  --z-panel: 400;
+}
+
+/*
+ * Section themes remap the semantic roles. Budget per screen (decision 29):
+ * the base, one field, one small accent. `deep` is kept for 3D and imagery
+ * chapters only.
+ */
+[data-theme="paper"] {
+  --color-bg: var(--color-paper);
+  --color-surface: var(--color-paper-2);
+  --color-fg: var(--color-ink);
+  --color-fg-muted: var(--color-ink-2);
+  --color-border: var(--color-line);
+  --color-accent: var(--color-ink);
+  --color-accent-fg: var(--color-paper);
+}
+[data-theme="deep"] {
+  --color-bg: var(--color-deep);
+  --color-surface: var(--color-deep-2);
+  --color-fg: var(--color-paper);
+  --color-fg-muted: #bcb1a4;
+  --color-border: #47302d;
+  --color-accent: var(--color-signature);
+  --color-accent-fg: var(--color-ink);
+}
+[data-theme="saffron"],
+[data-theme="sea"],
+[data-theme="lacquer"] {
+  --color-fg: var(--color-ink);
+  --color-fg-muted: color-mix(in oklch, var(--color-ink) 72%, var(--color-bg));
+  --color-border: color-mix(in oklch, var(--color-ink) 18%, var(--color-bg));
+  --color-accent: var(--color-ink);
+  --color-accent-fg: var(--color-bg);
+}
+[data-theme="saffron"] {
+  --color-bg: var(--color-saffron);
+  --color-surface: color-mix(in oklch, var(--color-saffron) 80%, var(--color-paper));
+}
+[data-theme="sea"] {
+  --color-bg: var(--color-sea);
+  --color-surface: color-mix(in oklch, var(--color-sea) 80%, var(--color-paper));
+}
+[data-theme="lacquer"] {
+  --color-bg: var(--color-lacquer);
+  --color-surface: color-mix(in oklch, var(--color-lacquer) 80%, var(--color-paper));
 }
