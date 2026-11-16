@@ -1,7 +1,5 @@
 "use client";
 
-/* eslint-disable @next/next/no-img-element -- lab prototype */
-
 import { useEffect, useRef, useState } from "react";
 
 import { useFinePointer } from "@/hooks/use-media-query";
@@ -9,9 +7,8 @@ import { gsap } from "@/lib/motion/gsap";
 
 import type { ShowcaseProject } from "../projects";
 import { DeviceStage } from "./device-stage";
-import { FrameScrub } from "./frame-scrub";
-import { LoopVideo } from "./loop-video";
 import { DECK_MEDIA, type Interaction } from "./media";
+import { useFrameSource, useLoopSource } from "./screen-sources";
 
 /**
  * - `loops`: both screens play recordings of the site's best sections.
@@ -22,70 +19,71 @@ export type StageMode = "loops" | "play" | "play-then-loops";
 
 type Props = { project: ShowcaseProject; mode: StageMode; active: boolean };
 
+const HANDOVER_MS = 700;
+
 export function ProjectStage({ project, mode, active }: Props) {
   const media = DECK_MEDIA[project.slug];
+  const play = media.play;
   const fine = useFinePointer();
   const interactive = mode !== "loops" && fine;
   const [engaged, setEngaged] = useState(false);
+  const engagedAt = useRef(0);
   const host = useRef<HTMLDivElement>(null);
   const state = useRef(initialInput());
-  useStageInput(host, state, media.play, interactive && active && !engaged, () => {
-    if (mode === "play-then-loops") setEngaged(true);
+  useStageInput(host, state, play, interactive && active && !engaged, () => {
+    if (mode !== "play-then-loops") return;
+    engagedAt.current = performance.now();
+    setEngaged(true);
   });
-  const frame = () => frameFor(media.play, state.current);
+
+  const looping = mode === "loops" || engaged || !fine;
+  // Touch devices keep the posters.
+  const moving = active && fine && looping;
+  const desktop = useLoopSource(host, media.desktop.src, media.desktop.poster, moving);
+  const phone = useLoopSource(host, media.phone.src, media.phone.poster, moving && mode !== "play");
+  const frames = useFrameSource(play.frames, interactive && active, () => frameFor(play, state.current));
+
+  const laptopLayers = () => {
+    if (!interactive) return desktop();
+    if (!engaged) return frames();
+    const t = Math.min(1, (performance.now() - engagedAt.current) / HANDOVER_MS);
+    return [...frames(), ...desktop().map(([src, a]): [CanvasImageSource, number] => [src, a * t])];
+  };
+
   /** A long press revs; it mustn't also open the project. */
   const onClickCapture = (e: React.MouseEvent) => {
     const s = state.current;
-    if (media.play.kind === "hold" && s.heldAt && performance.now() - s.heldAt > 220) {
+    if (play.kind === "hold" && s.heldAt && performance.now() - s.heldAt > 220) {
       e.preventDefault();
       e.stopPropagation();
     }
   };
 
-  const looping = mode === "loops" || engaged || !fine;
-  const play = media.play;
-
   return (
     <div
       ref={host}
-      className="size-full select-none"
+      className="relative size-full select-none"
       onClickCapture={onClickCapture}
       onDragStart={(e) => e.preventDefault()}
     >
-      <DeviceStage
-        project={project}
-        laptop={
-          <>
-            {mode !== "loops" && (
-              <FrameScrub frames={play.frames} frame={frame} load={interactive && active} />
-            )}
-            {(looping || mode === "play-then-loops") && (
-              <div
-                className="absolute inset-0 transition-opacity duration-700"
-                style={{ opacity: looping ? 1 : 0 }}
-              >
-                <LoopVideo src={media.desktop.src} poster={media.desktop.poster} play={active && looping} />
-              </div>
-            )}
-          </>
-        }
-        phone={
-          mode === "play" || (mode === "play-then-loops" && !engaged) ? (
-            <img src={media.phone.poster} alt="" className="absolute inset-0 size-full object-cover object-top" draggable={false} />
-          ) : (
-            <LoopVideo src={media.phone.src} poster={media.phone.poster} play={active && looping} />
-          )
-        }
-      >
-        {interactive && (
-          <p
-            className="pointer-events-none absolute bottom-[4%] left-[4%] rounded-full px-3 py-1.5 font-mono text-[11px] tracking-wide uppercase transition-opacity duration-500"
-            style={{ backgroundColor: project.field, color: project.deep, opacity: active && !engaged ? 1 : 0 }}
+      <DeviceStage project={project} laptop={laptopLayers} phone={phone} live={active && fine} />
+      {interactive && (
+        <p
+          data-mirror="block"
+          data-mirror-3d=""
+          className="pointer-events-none absolute bottom-[4%] left-[4%] rounded-full px-3 py-1.5 transition-opacity duration-500"
+          style={{ backgroundColor: project.field, opacity: active && !engaged ? 1 : 0 }}
+        >
+          <span
+            data-mirror="text"
+            data-mirror-3d=""
+            className="relative block font-mono text-[11px] tracking-wide uppercase"
+            style={{ color: project.deep }}
           >
             {play.hint}
-          </p>
-        )}
-      </DeviceStage>
+          </span>
+        </p>
+      )}
     </div>
   );
 }

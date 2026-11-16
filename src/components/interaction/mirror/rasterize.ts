@@ -34,8 +34,15 @@ export function textSignature(el: HTMLElement, rect: DOMRect) {
   return `${Math.round(rect.width)}x${Math.round(rect.height)}|${style.color}|${style.font}|${el.textContent}`;
 }
 
-export function rasterizeText(el: HTMLElement, ratio: number, reuse?: HTMLCanvasElement): TextRaster | null {
-  const rect = el.getBoundingClientRect();
+/**
+ * For text inside CSS 3D (data-mirror-3d): the element's own box and a map
+ * from client points into it, so the raster is drawn unrotated and unscaled
+ * and the engine can place it on the projected quad.
+ */
+export type LocalSpace = { width: number; height: number; toLocal: (x: number, y: number) => [number, number] };
+
+export function rasterizeText(el: HTMLElement, ratio: number, reuse?: HTMLCanvasElement, local?: LocalSpace): TextRaster | null {
+  const rect = local ? new DOMRect(0, 0, local.width, local.height) : el.getBoundingClientRect();
   if (rect.width < 1 || rect.height < 1) return null;
   const rootStyle = getComputedStyle(el);
   const pad = parseFloat(rootStyle.fontSize) * PAD;
@@ -56,6 +63,16 @@ export function rasterizeText(el: HTMLElement, ratio: number, reuse?: HTMLCanvas
   let node: Node | null;
   const originX = rect.left - pad;
   const originY = rect.top - pad;
+  // A word's client box is only axis-aligned in 2D; in 3D its centre is mapped into the element and the word drawn around it.
+  const drawWord = (word: string, r: DOMRect, ascent: number, descent: number) => {
+    if (!local) {
+      const baseline = r.top + (r.height - (ascent + descent)) / 2 + ascent;
+      ctx.fillText(word, r.left - originX, baseline - originY);
+      return;
+    }
+    const [lx, ly] = local.toLocal(r.left + r.width / 2, r.top + r.height / 2);
+    ctx.fillText(word, lx + pad - ctx.measureText(word).width / 2, ly + pad + (ascent - descent) / 2);
+  };
 
   while ((node = walker.nextNode())) {
     const text = node.nodeValue ?? "";
@@ -83,9 +100,7 @@ export function rasterizeText(el: HTMLElement, ratio: number, reuse?: HTMLCanvas
       if (!rects.length) continue;
       const word = transformText(match[0], mode);
       if (rects.length === 1) {
-        const r = rects[0];
-        const baseline = r.top + (r.height - (ascent + descent)) / 2 + ascent;
-        ctx.fillText(word, r.left - originX, baseline - originY);
+        drawWord(word, rects[0], ascent, descent);
       } else {
         // A word broken across lines (hyphenation, long URLs): draw per character.
         for (let i = 0; i < match[0].length; i++) {
@@ -93,8 +108,7 @@ export function rasterizeText(el: HTMLElement, ratio: number, reuse?: HTMLCanvas
           range.setEnd(node, match.index + i + 1);
           const cr = range.getClientRects()[0];
           if (!cr) continue;
-          const baseline = cr.top + (cr.height - (ascent + descent)) / 2 + ascent;
-          ctx.fillText(transformText(match[0][i], mode), cr.left - originX, baseline - originY);
+          drawWord(transformText(match[0][i], mode), cr, ascent, descent);
         }
       }
     }
