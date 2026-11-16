@@ -13,7 +13,7 @@ export function SoundToggle({ className }: { className?: string }) {
       aria-pressed={on}
       onClick={() => setSoundEnabled(!on)}
       data-sound="off"
-      className={`group inline-flex items-center gap-2 px-3 py-2 ${className ?? ""}`}
+      className={`group hidden items-center gap-2 px-3 py-2 pointer-fine:inline-flex ${className ?? ""}`}
     >
       <span aria-hidden className="flex h-3 items-end gap-[2px]">
         {[0.45, 1, 0.7, 0.85].map((h, i) => (

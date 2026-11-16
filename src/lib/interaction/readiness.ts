@@ -30,11 +30,19 @@ function firstScreenMedia(): Promise<unknown>[] {
   return out;
 }
 
-/** Resolves when everything gating the first screen is in, or the caps pass. */
-export function waitForReady({ perItem, cap }: { perItem: number; cap: number }) {
+/**
+ * Resolves when everything gating the first screen is in, or the caps pass.
+ * Waits a frame first so gates registered by the page's own effects (which
+ * run after the loader's) are included. ?slow=N adds an N-second gate, to
+ * see the slow-network loop in the lab.
+ */
+export async function waitForReady({ perItem, cap }: { perItem: number; cap: number }) {
+  await new Promise((r) => requestAnimationFrame(r));
+  const slow = Number(new URLSearchParams(location.search).get("slow")) || 0;
   const items: Promise<unknown>[] = [document.fonts?.ready ?? Promise.resolve(), ...firstScreenMedia(), ...gates.values()];
-  const all = Promise.all(items.map((p) => withTimeout(p, perItem)));
-  return withTimeout(all, cap);
+  if (slow > 0) items.push(new Promise((r) => setTimeout(r, slow * 1000)));
+  const all = Promise.all(items.map((p) => withTimeout(p, Math.max(perItem, slow))));
+  return withTimeout(all, Math.max(cap, slow));
 }
 
 export function markLoaderDone() {

@@ -46,19 +46,29 @@ export function LetterPush({ text, as: Tag = "span", className, letterClassName 
     ro.observe(el);
     document.fonts?.ready.then(measure);
 
+    // Re-measure whenever the pointer arrives, so intro transforms on the words can't leave stale centres.
+    let near = false;
+    let resting = true;
     const tick = (_t: number, deltaMs: number) => {
       const dt = Math.min(deltaMs, 100) / 1000;
       const p = letterTuning.params;
       const r = el.getBoundingClientRect();
+      const reach = 80;
+      const nowNear =
+        pointer.active && pointer.x > r.left - reach && pointer.x < r.right + reach && pointer.y > r.top - reach && pointer.y < r.bottom + reach;
+      if (nowNear && !near) measure();
+      near = nowNear;
+      if (!near && resting) return;
       const px = pointer.x - r.left;
       const py = pointer.y - r.top;
       const k = damp(p.smoothing, dt);
+      resting = true;
       for (let i = 0; i < letters.length; i++) {
         const c = centres[i];
         if (!c) continue;
         let tx = 0;
         let ty = 0;
-        if (pointer.active) {
+        if (near) {
           const dx = c.x - px;
           const dy = c.y - py;
           const dist = Math.hypot(dx, dy);
@@ -77,6 +87,7 @@ export function LetterPush({ text, as: Tag = "span", className, letterClassName 
           o.x = o.y = 0;
           continue;
         }
+        resting = false;
         letters[i].style.translate = `${o.x.toFixed(2)}px ${o.y.toFixed(2)}px`;
       }
     };
@@ -97,7 +108,7 @@ export function LetterPush({ text, as: Tag = "span", className, letterClassName 
             {" "}
           </span>
         ) : (
-          <span key={wi} aria-hidden className="inline-block whitespace-nowrap">
+          <span key={wi} aria-hidden data-word="" className="inline-block whitespace-nowrap">
             {[...word].map((ch, ci) => (
               <span key={ci} data-letter="" className={`inline-block ${letterClassName ?? ""}`}>
                 {ch}

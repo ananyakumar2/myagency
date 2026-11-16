@@ -119,6 +119,8 @@ export function Loader() {
       tl.to(state, { v: 1, duration: 0.45, ease: ease("out"), onUpdate: render })
         .to(word.current, { yPercent: -60, opacity: 0, duration: 0.6, ease: ease("in-out") }, "<0.15")
         .to(fields.current, { yPercent: -101, duration: 0.8, ease: ease("in-out") }, ">-0.2")
+        // The window turns into a hole onto the first screen as the fields lift.
+        .set(w, { backgroundColor: "transparent" }, "<")
         .to(w, { scale: cover, duration: p.grow, ease: ease("in-out") }, "<0.1")
         .add(() => markLoaderDone(), `<${p.grow * 0.45}`);
     };

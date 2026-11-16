@@ -1,40 +1,43 @@
 import type { Metadata } from "next";
 
-import { PageTransition, TransitionLink } from "@/components/motion/page-transition";
-import { ParallaxMedia } from "@/components/motion/parallax";
-import { Reveal } from "@/components/motion/reveal";
-import { SplitReveal } from "@/components/motion/split-reveal";
-import { PlaceholderMedia } from "@/components/site/placeholder-media";
+import { MirrorRoot } from "@/components/interaction/mirror/mirror-root";
+import { PageTransition } from "@/components/motion/page-transition";
+import { WorkCard } from "@/components/site/work-card";
+import { WORK } from "@/lib/work/projects";
 
 export const metadata: Metadata = { title: "Work" };
 
+/**
+ * The work index runs on the mirror (decision 1): the page is drawn to one
+ * WebGL canvas that bows with scroll speed (60 px at full speed), carries a
+ * faint lens under the cursor (decision 8) and ripples on card clicks.
+ */
 export default function WorkPage() {
   return (
     <PageTransition>
-      <article className="px-gutter pt-40 pb-section">
-        <div className="mx-auto max-w-page">
-          <Reveal variant="fade" className="font-mono text-xs tracking-wide text-fg-muted uppercase">
-            Case study — placeholder
-          </Reveal>
-          <SplitReveal as="h1" className="mt-6 max-w-[16ch] text-4xl leading-tight font-medium tracking-tight">
-            A second route to demonstrate page transitions.
-          </SplitReveal>
-          <Reveal variant="clip" className="mt-16">
-            <ParallaxMedia aspect="16 / 9" amount={8} className="rounded-md">
-              <PlaceholderMedia label="Hero image" tone={2} />
-            </ParallaxMedia>
-          </Reveal>
-          <Reveal variant="up" className="mt-16 max-w-[60ch] text-lg text-fg-muted">
-            <p>
-              Navigating here from the home page plays a forward transition; the link below plays the reverse.
-              The header is excluded from the transition so it stays anchored.
+      <MirrorRoot>
+        <div data-cursor-section="trail" className="px-gutter pt-36 pb-section">
+          <div className="mx-auto max-w-page">
+            <p data-mirror="text" className="font-mono text-xs tracking-wide text-fg-muted uppercase">
+              Selected work — placeholder projects
             </p>
-          </Reveal>
-          <TransitionLink href="/" direction="back" className="mt-12 inline-block text-sm underline underline-offset-4">
-            ← Back home
-          </TransitionLink>
+            <h1 data-mirror="text" className="mt-6 max-w-[18ch] text-display leading-tight font-medium tracking-tight">
+              Five small worlds, each with one idea.
+            </h1>
+            <p data-mirror="text" className="mt-6 max-w-[52ch] text-lg text-fg-muted">
+              Scroll fast to feel the page bend, move the cursor to see the lens, and open a project to watch its image carry
+              you into the case study.
+            </p>
+            <ul className="mt-20 grid gap-x-6 gap-y-16 md:grid-cols-2">
+              {WORK.map((project, i) => (
+                <li key={project.slug} className={i % 2 === 1 ? "md:mt-32" : ""}>
+                  <WorkCard project={project} index={i} />
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
-      </article>
+      </MirrorRoot>
     </PageTransition>
   );
 }
