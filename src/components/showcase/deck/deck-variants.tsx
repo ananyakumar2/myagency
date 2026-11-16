@@ -2,7 +2,7 @@ import Link from "next/link";
 
 import { PageTransition } from "@/components/motion/page-transition";
 
-import { DeckStageShowcase } from "./deck-stage-showcase";
+import { WorkDeck } from "../work-deck";
 import type { StageMode } from "./project-stage";
 
 export const DECK_VARIANTS: { n: number; mode: StageMode; name: string; idea: string; detail: string }[] = [
@@ -47,7 +47,7 @@ export function DeckVariantPage({ n }: { n: number }) {
           <p className="border-t border-border pt-3 text-sm leading-snug md:col-span-5">{v.detail}</p>
         </header>
 
-        <DeckStageShowcase mode={v.mode} />
+        <WorkDeck mode={v.mode} />
 
         <footer className="mx-auto max-w-page px-gutter py-section">
           <DeckVariantNav current={n} />

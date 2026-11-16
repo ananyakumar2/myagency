@@ -31,21 +31,30 @@ export type DeckHeroProps = {
 type DeckProps = {
   /** Replaces the hero image in each sheet. */
   Hero?: ComponentType<DeckHeroProps>;
+  /** Anchor id for the section. */
+  id?: string;
+  /**
+   * The Deck brings its own MirrorRoot. Pass false when it's mounted inside a page that already
+   * has one; there can only be one per page.
+   */
+  ownMirror?: boolean;
 };
 
-export function DeckShowcase(props: DeckProps) {
+export function DeckShowcase({ ownMirror = true, ...props }: DeckProps) {
   const reduced = useReducedMotion();
   if (reduced) return <StaticShowcase />;
   // The whole pile is mirrored, not just its images: the shared canvas sits under the DOM, so
   // anything left in the DOM would show through the sheets dealt over it.
-  return (
+  return ownMirror ? (
     <MirrorRoot>
       <Deck {...props} />
     </MirrorRoot>
+  ) : (
+    <Deck {...props} />
   );
 }
 
-function Deck({ Hero }: DeckProps) {
+function Deck({ Hero, id }: Omit<DeckProps, "ownMirror">) {
   const section = useRef<HTMLElement>(null);
   const trigger = useRef<ScrollTrigger | null>(null);
   const progress = useRef(0);
@@ -100,7 +109,7 @@ function Deck({ Hero }: DeckProps) {
   const getProgress = useCallback(() => progress.current, []);
 
   return (
-    <section ref={section} aria-label="Selected work" data-mirror="block" className="relative h-svh overflow-hidden bg-bg">
+    <section ref={section} id={id} aria-label="Selected work" data-mirror="block" className="relative h-svh overflow-hidden bg-bg">
       <div className="absolute inset-x-gutter top-[11svh] bottom-[13svh] z-0">
         {PROJECTS.map((p, k) => (
           <CentreLink
