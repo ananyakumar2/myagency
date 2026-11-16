@@ -10,9 +10,11 @@ export type CubeState = {
   roll: number;
   flatten: number;
   universe: number;
+  /** 1 while the section is on screen; the canvas renders only then. */
+  visible: number;
 };
 
-export const createState = (): CubeState => ({ intro: 0, slide: 0, swing: 0, roll: 0, flatten: 0, universe: 0 });
+export const createState = (): CubeState => ({ intro: 0, slide: 0, swing: 0, roll: 0, flatten: 0, universe: 0, visible: 1 });
 
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
 const cubicOut = (t: number) => 1 - Math.pow(1 - t, 3);
