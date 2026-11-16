@@ -52,9 +52,9 @@ float roundedBox(vec2 p, vec2 halfSize, float r) {
 }
 
 void main() {
-  vec2 half = uSize * 0.5;
+  vec2 extent = uSize * 0.5;
   float aa = 0.75 / uRatio;
-  float d = roundedBox(vLocal - half, half, min(uRadius, min(half.x, half.y)));
+  float d = roundedBox(vLocal - extent, extent, min(uRadius, min(extent.x, extent.y)));
   float mask = 1.0 - smoothstep(-aa, aa, d);
   if (uClip.z >= 0.0) {
     vec2 ch = uClip.zw * 0.5;

@@ -9,7 +9,7 @@ export default function LabIndex() {
   return (
     <div className="min-h-svh px-gutter pt-28 pb-24">
       <p className="font-mono text-xs tracking-wide text-fg-muted uppercase">Interaction lab</p>
-      <h1 className="mt-3 max-w-[18ch] text-5xl font-medium tracking-tight">Every effect on its own page, with live tuning.</h1>
+      <h1 className="mt-3 max-w-[18ch] text-4xl font-medium tracking-tight">Every effect on its own page, with live tuning.</h1>
       <p className="mt-4 max-w-[60ch] text-fg-muted">
         Values set in a lab&apos;s panel persist in this browser and apply across the whole site, so they can be judged in place. Use Copy to send them back as new defaults.
       </p>

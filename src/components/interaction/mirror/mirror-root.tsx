@@ -72,7 +72,8 @@ export function MirrorRoot({ children, className, ignoreRetreats, onStatus }: Mi
           report("retreated", reason);
         },
       });
-    } catch {
+    } catch (err) {
+      console.warn("Mirror unavailable, staying on the DOM:", err);
       stopPointer();
       return;
     }

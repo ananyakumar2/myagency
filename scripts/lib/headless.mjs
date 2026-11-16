@@ -42,7 +42,15 @@ export async function launch() {
     executablePath: process.env.CHROME ?? "/usr/local/bin/google-chrome",
     headless: true,
     userDataDir: `/tmp/headless-render-${process.pid}`,
-    args: ["--no-sandbox", "--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist", "--hide-scrollbars"],
+    args: [
+      "--no-sandbox",
+      "--use-angle=swiftshader",
+      "--enable-unsafe-swiftshader",
+      "--ignore-gpu-blocklist",
+      "--hide-scrollbars",
+      // Present as a desktop mouse, so (hover: hover) and (pointer: fine) match.
+      "--blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4",
+    ],
   });
 }
 

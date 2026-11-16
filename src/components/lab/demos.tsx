@@ -56,8 +56,8 @@ export function LabDemo({ slug }: { slug: string }) {
       return <FrameSequence manifest="/seq/demo/manifest.json" poster="/seq/demo/land/000.webp" alt="Placeholder car, turning from three-quarter to rear view" />;
     case "helmet":
       return (
-        <Torch className="grid min-h-[90svh] place-items-center px-gutter py-24">
-          <Helmet className="aspect-square w-full max-w-[44rem]" />
+        <Torch className="px-gutter py-16">
+          <Helmet className="mx-auto aspect-square w-full max-w-[44rem]" />
         </Torch>
       );
     case "springs":
@@ -66,7 +66,7 @@ export function LabDemo({ slug }: { slug: string }) {
       return (
         <Torch className="grid min-h-[90svh] content-center gap-6 px-gutter py-24">
           <p className={`${label} text-(--color-fg-muted)`}>Deep section</p>
-          <p className="max-w-[18ch] text-5xl leading-[1.05] font-medium tracking-tight">A warm light follows the cursor here, and only here.</p>
+          <p className="max-w-[18ch] text-4xl leading-[1.05] font-medium tracking-tight">A warm light follows the cursor here, and only here.</p>
         </Torch>
       );
     case "colour":
@@ -85,7 +85,7 @@ function MirrorSpecimen() {
   return (
     <div className="space-y-24 px-gutter pt-12 pb-[40vh]">
       <div className="grid gap-6 md:grid-cols-12">
-        <p data-mirror="text" className="text-6xl leading-[0.95] font-medium tracking-tight md:col-span-8 md:text-8xl">
+        <p data-mirror="text" className="text-4xl leading-[0.95] font-medium tracking-tight md:col-span-8 md:text-display">
           Everything here is drawn by one WebGL canvas.
         </p>
         <p data-mirror="text" className="self-end text-fg-muted md:col-span-4">
@@ -126,7 +126,7 @@ function ShockDemo() {
       >
         <MirrorRoot ignoreRetreats>
           <div className="px-gutter pt-12">
-            <p data-mirror="text" className="max-w-[20ch] text-5xl font-medium tracking-tight">
+            <p data-mirror="text" className="max-w-[20ch] text-4xl font-medium tracking-tight">
               Click anywhere. The cards below wait for the ring before they open.
             </p>
             <div className="mt-12 grid gap-6 md:grid-cols-3">
@@ -203,7 +203,7 @@ function LettersDemo() {
       <h2 className="text-[11vw] leading-[0.9] font-medium tracking-tighter">
         <LetterPush text="Studio®" />
       </h2>
-      <p className="max-w-[18ch] text-6xl leading-[1.02] font-medium tracking-tight">
+      <p className="max-w-[18ch] text-display leading-[1.02] font-medium tracking-tight">
         <LetterPush text="Quiet motion for considered brands." />
       </p>
     </Section>
@@ -212,7 +212,7 @@ function LettersDemo() {
 
 type BurstProps = React.ComponentProps<typeof Burst>;
 
-const word = "text-5xl font-medium tracking-tight";
+const word = "text-4xl font-medium tracking-tight";
 
 const BURSTS: { title: string; props: BurstProps }[] = [
   { title: "Scramble (Grail's label shuffle)", props: { kind: "scramble", phrases: ["Interaction-led design", "Dubai · Abu Dhabi", "Placeholder studio"], className: "text-3xl font-medium" } },
@@ -346,7 +346,7 @@ function TransitionsDemo() {
       </Sheet>
       <InkReveal color={next.field} className="min-h-[90svh]">
         <div className="grid min-h-[90svh] content-center px-gutter">
-          <p className="max-w-[18ch] text-5xl leading-[1.05] font-medium tracking-tight">Ink spreads from the corner, then the words settle in.</p>
+          <p className="max-w-[18ch] text-4xl leading-[1.05] font-medium tracking-tight">Ink spreads from the corner, then the words settle in.</p>
         </div>
       </InkReveal>
       <Sheet side="right" className="min-h-[60svh] px-gutter py-16">
