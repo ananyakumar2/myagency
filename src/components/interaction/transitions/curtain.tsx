@@ -65,7 +65,7 @@ export function Curtain() {
       el.style.borderRadius = `50% 50% 0 0 / ${arch} ${arch} 0 0`;
       t.textContent = r.title;
       gsap.set(el, { yPercent: 100, y: 0, visibility: "visible" });
-      gsap.set(t, { opacity: 0, yPercent: 30 });
+      gsap.set(t, { opacity: 0, yPercent: 30, y: 0 });
       playSound("whoosh");
       document.documentElement.classList.remove("mirror-on");
 
@@ -83,6 +83,8 @@ export function Curtain() {
             // Swap the arch to the trailing edge while the screen is covered.
             el.style.borderRadius = `0 0 50% 50% / 0 0 ${arch} ${arch}`;
             gsap.set(el, { y: 0 });
+            // The panel just dropped by the arch; lift the title by the same so it holds still.
+            gsap.set(t, { y: -window.innerHeight * p.arch });
             const main = document.getElementById("main");
             const out = gsap.timeline({
               delay: p.hold,
