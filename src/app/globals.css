@@ -82,6 +82,20 @@ html.mirror-on [data-mirror-root] [data-mirror="image"] {
   opacity: 0 !important;
 }
 
+/* Over full-bleed 3D sections the header drops its bar and turns light. */
+html header {
+  transition:
+    background-color var(--duration-base) var(--ease-out),
+    backdrop-filter var(--duration-base) var(--ease-out);
+}
+html[data-header="clear"] header {
+  background-color: transparent;
+  backdrop-filter: none;
+}
+html[data-header="clear"] header nav {
+  color: #f0f0f0;
+}
+
 /* Press states (decision 14): Grail's lift, scale and dip */
 [data-press] {
   transition:
