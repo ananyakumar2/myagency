@@ -1,10 +1,10 @@
-import { ArchHero } from "@/components/home/arch-hero";
 import { DesktopOnly } from "@/components/home/desktop-only";
 import { ContactFooter, Services, Studio, WorkIntro } from "@/components/home/home-sections";
 import { MirrorRoot } from "@/components/interaction/mirror/mirror-root";
 import { CubeSection } from "@/components/lab/cubes/cube-section";
 import { PageTransition } from "@/components/motion/page-transition";
 import { WorkDeck } from "@/components/showcase/work-deck";
+import { HomeHero } from "@/components/site/home-hero";
 
 /**
  * One mirror for the whole page (only one MirrorRoot is allowed per page): the copy bends with
@@ -14,7 +14,7 @@ export default function Home() {
   return (
     <PageTransition>
       <MirrorRoot>
-        <ArchHero />
+        <HomeHero />
         <WorkIntro />
         <WorkDeck id="work" ownMirror={false} />
         <DesktopOnly>
