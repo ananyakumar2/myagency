@@ -20,20 +20,24 @@ import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.j
 import { helmetTuning } from "@/lib/interaction/config";
 import { pointer, startPointer } from "@/lib/interaction/pointer";
 
-const DPR_KEY = "helmet:dpr";
+/** Remembered per screen, as Jack Johns does: a ratio that suits one display may not suit another. */
+const dprKey = () => `helmet:dpr:${screen.width}x${screen.height}@${window.devicePixelRatio || 1}`;
 
-/** Jack Johns' governor: a pixel budget caps the ratio, slow frames step it down, the result is kept for a day. */
-function initialDpr() {
+/** The pixel budget caps the ratio for a canvas of this size. */
+function capDpr(w: number, h: number) {
   const p = helmetTuning.params;
+  const budget = Math.sqrt((p.budgetMP * 1e6) / Math.max(w * h, 1));
+  return Math.max(p.dprMin, Math.min(window.devicePixelRatio || 1, p.dprMax, budget));
+}
+
+function initialDpr() {
   try {
-    const saved = JSON.parse(localStorage.getItem(DPR_KEY) ?? "null") as { v: number; t: number } | null;
+    const saved = JSON.parse(localStorage.getItem(dprKey()) ?? "null") as { v: number; t: number } | null;
     if (saved && Date.now() - saved.t < 864e5) return saved.v;
   } catch {
     /* storage blocked */
   }
-  const css = window.innerWidth * window.innerHeight * 0.6;
-  const budget = Math.sqrt((p.budgetMP * 1e6) / Math.max(css, 1));
-  return Math.max(p.dprMin, Math.min(window.devicePixelRatio || 1, p.dprMax, budget));
+  return capDpr(window.innerWidth * 0.5, window.innerHeight * 0.8);
 }
 
 export default function HelmetScene({ src, active, onReady, onSlow }: { src: string; active: boolean; onReady: () => void; onSlow: () => void }) {
@@ -147,32 +151,47 @@ function Model({ src, onReady }: { src: string; onReady: () => void }) {
   );
 }
 
+/**
+ * Jack Johns' governor: the median of the last 90 frame times against the
+ * device's own best (third-fastest frame, at least one 60 Hz frame). 28% over
+ * steps the ratio down by 0.25; 6% within for 6 s steps it back up. At the
+ * floor and still under 50 fps, the poster takes over (decision 24).
+ */
 function Governor({ dpr, setDpr, onSlow }: { dpr: number; setDpr: (v: number) => void; onSlow: () => void }) {
+  const size = useThree((s) => s.size);
   const samples = useRef<number[]>([]);
   const last = useRef(0);
+  const changed = useRef(0);
   useFrame(() => {
     const now = performance.now();
     const gap = now - last.current;
     last.current = now;
     // Only consecutive frames count: render-on-demand leaves long idle gaps.
     if (gap <= 0 || gap > 120) return;
-    samples.current.push(gap);
-    if (samples.current.length < 40) return;
-    const avg = samples.current.reduce((a, b) => a + b, 0) / samples.current.length;
-    samples.current.length = 0;
-    if (avg <= 20) return;
-    const p = helmetTuning.params;
-    if (dpr - 0.25 >= p.dprMin) {
-      const next = dpr - 0.25;
-      setDpr(next);
+    const list = samples.current;
+    list.push(gap);
+    if (list.length > 90) list.shift();
+    if (list.length < 45) return;
+    const sorted = [...list].sort((a, b) => a - b);
+    const median = sorted[sorted.length >> 1]!;
+    const base = Math.max(sorted[2]!, 6.5, 1000 / 60);
+    const cap = capDpr(size.width, size.height);
+    const min = helmetTuning.params.dprMin;
+    const set = (v: number) => {
+      changed.current = now;
+      list.length = 0;
+      setDpr(v);
       try {
-        localStorage.setItem(DPR_KEY, JSON.stringify({ v: next, t: Date.now() }));
+        localStorage.setItem(dprKey(), JSON.stringify({ v, t: Date.now() }));
       } catch {
         /* storage blocked */
       }
-    } else {
-      onSlow();
-    }
+    };
+    if (dpr > cap) set(cap);
+    else if (median > base * 1.28 && now - changed.current > 1200) {
+      if (dpr > min) set(Math.max(min, dpr - 0.25));
+      else if (median > 20) onSlow();
+    } else if (median <= base * 1.06 && now - changed.current > 6000 && dpr < cap) set(Math.min(cap, dpr + 0.25));
   });
   return null;
 }
