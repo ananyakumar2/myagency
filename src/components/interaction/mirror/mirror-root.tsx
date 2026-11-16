@@ -44,6 +44,7 @@ export function MirrorRoot({ children, className, ignoreRetreats, onStatus }: Mi
     const stopPointer = startPointer();
     let engine: MirrorEngine | null = null;
     let disposed = false;
+    let fadeIn: gsap.core.Tween | null = null;
     const report = (s: MirrorStatus, reason?: string) => {
       setStatus(s);
       statusCb.current?.(s, reason);
@@ -60,11 +61,13 @@ export function MirrorRoot({ children, className, ignoreRetreats, onStatus }: Mi
       engine = new MirrorEngine(el, cv, {
         onReady: () => {
           if (disposed) return;
-          html.classList.add("mirror-on");
-          gsap.to(cv, { opacity: 1, duration: 0.2 });
+          // The canvas sits under the content: bring it up while the DOM still covers it,
+          // then hide the DOM. Hiding first shows the bare window for the length of the fade.
+          fadeIn = gsap.to(cv, { opacity: 1, duration: 0.2, onComplete: () => void (disposed || html.classList.add("mirror-on")) });
           report("on");
         },
         onRetreat: (reason) => {
+          fadeIn?.kill();
           recordRetreat();
           html.classList.remove("mirror-on");
           setActiveMirror(null);
@@ -79,10 +82,17 @@ export function MirrorRoot({ children, className, ignoreRetreats, onStatus }: Mi
     }
     report("starting");
     setActiveMirror(engine);
-    void engine.start();
+    // Arriving through a shared-element morph: start once it has landed. A mirror
+    // drawing during the view transition would show the image twice.
+    const morph = Number(html.dataset.morph ?? 0);
+    delete html.dataset.morph;
+    const wait = morph && Date.now() - morph < 4000 ? cssMs("--duration-slow", 1200) + 120 : 0;
+    const startTimer = window.setTimeout(() => void engine?.start(), wait);
 
     return () => {
       disposed = true;
+      window.clearTimeout(startTimer);
+      fadeIn?.kill();
       teardown();
       stopPointer();
     };
@@ -101,4 +111,11 @@ export function MirrorRoot({ children, className, ignoreRetreats, onStatus }: Mi
       </div>
     </>
   );
+}
+
+function cssMs(name: string, fallback: number) {
+  const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  const n = parseFloat(v);
+  if (!Number.isFinite(n)) return fallback;
+  return v.endsWith("ms") ? n : n * 1000;
 }

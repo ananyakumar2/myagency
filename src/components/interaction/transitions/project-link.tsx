@@ -31,9 +31,16 @@ export function ShockLink({ transition = "none", curtainTitle, curtainColor, onC
       curtainNavigate({ href: url, title: curtainTitle ?? "", color: curtainColor });
       return;
     }
-    // The shared-element snapshot is taken from the DOM, so hand the page back first.
-    document.documentElement.classList.remove("mirror-on");
-    router.push(url, transition === "project" ? { transitionTypes: ["project-open"] } : undefined);
+    // The shared-element snapshot is taken from the DOM, so hand the page back first,
+    // and give it two frames to paint: media hidden under the mirror isn't rastered yet.
+    const html = document.documentElement;
+    const handBack = html.classList.contains("mirror-on");
+    html.classList.remove("mirror-on");
+    // The next page's mirror waits for the morph, so the view transition snapshots real images.
+    if (transition === "project") html.dataset.morph = String(Date.now());
+    const push = () => router.push(url, transition === "project" ? { transitionTypes: ["project-open"] } : undefined);
+    if (handBack) requestAnimationFrame(() => requestAnimationFrame(push));
+    else push();
   };
   const handle = (e: MouseEvent<HTMLAnchorElement>) => {
     onClick?.(e);

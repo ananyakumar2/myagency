@@ -94,7 +94,12 @@ export function Curtain() {
             out
               .to(t, { yPercent: -40, opacity: 0, duration: 0.5, ease: ease("in-out") })
               .to(el, { yPercent: -100, y: () => -window.innerHeight * p.arch, duration: p.exit, ease: ease("in-out") }, 0.1);
-            if (main) out.fromTo(main, { y: () => window.innerHeight * 0.08 }, { y: 0, duration: p.exit + 0.4, ease: ease("out"), clearProps: "transform" }, 0.15);
+            if (main) {
+              // A relative offset, not a transform: a transformed #main would become the
+              // containing block for the mirror's fixed canvas and stretch it to the page.
+              main.style.position = "relative";
+              out.fromTo(main, { top: () => window.innerHeight * 0.08 }, { top: 0, duration: p.exit + 0.4, ease: ease("out"), clearProps: "top,position" }, 0.15);
+            }
           });
         });
     };

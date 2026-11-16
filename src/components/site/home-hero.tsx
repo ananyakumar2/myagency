@@ -47,6 +47,7 @@ export function HomeHero() {
     let visible = true;
     let started = false;
     let timer: gsap.core.Tween | null = null;
+    let wiping: gsap.core.Tween | null = null;
     const io = new IntersectionObserver(([e]) => {
       visible = e.isIntersecting;
       if (visible && started && !timer?.isActive()) schedule();
@@ -58,8 +59,9 @@ export function HomeHero() {
       const p = heroTuning.params;
       const next = (index + 1) % FIELDS.length;
       const w = wipe.current!;
+      const b = base.current!;
       w.style.background = FIELDS[next];
-      gsap.fromTo(
+      wiping = gsap.fromTo(
         w,
         { clipPath: "inset(100% 0% 0% 0%)" },
         {
@@ -67,7 +69,7 @@ export function HomeHero() {
           duration: p.wipe,
           ease: ease("in-out"),
           onComplete: () => {
-            base.current!.style.background = FIELDS[next];
+            b.style.background = FIELDS[next];
             gsap.set(w, { clipPath: "inset(100% 0% 0% 0%)" });
             index = next;
             schedule();
@@ -86,6 +88,7 @@ export function HomeHero() {
     return () => {
       stopWaiting();
       timer?.kill();
+      wiping?.kill();
       io.disconnect();
     };
   }, []);
