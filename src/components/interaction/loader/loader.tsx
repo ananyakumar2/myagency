@@ -109,6 +109,12 @@ export function Loader() {
     const handoff = () => {
       const w = win.current!;
       const r = w.getBoundingClientRect();
+      const target = document.querySelector<HTMLElement>("[data-loader-target]");
+      const t = target?.getBoundingClientRect();
+      if (t && t.width > 0 && t.bottom > 0 && t.top < window.innerHeight) {
+        landOn(w, r, t);
+        return;
+      }
       // Scale that makes the arch cover the viewport, corners included.
       const cover = Math.max((window.innerWidth * 1.25) / r.width, (window.innerHeight * 1.4) / r.height);
       const tl = gsap.timeline({
@@ -125,6 +131,29 @@ export function Loader() {
         .add(() => markLoaderDone(), `<${p.grow * 0.45}`);
     };
 
+    // A page with a [data-loader-target] (the home hero's arch) receives the mark: the hole
+    // travels onto that window, then the paper around it lifts away.
+    const landOn = (w: HTMLElement, r: DOMRect, t: DOMRect) => {
+      const tl = gsap.timeline({ onComplete: () => el.remove() });
+      tl.to(state, { v: 1, duration: 0.45, ease: ease("out"), onUpdate: render })
+        .to(word.current, { yPercent: -60, opacity: 0, duration: 0.6, ease: ease("in-out") }, "<0.15")
+        .to(fields.current, { yPercent: -101, duration: 0.8, ease: ease("in-out") }, ">-0.2")
+        .set(w, { backgroundColor: "transparent" }, "<")
+        .to(
+          w,
+          {
+            x: t.left + t.width / 2 - (r.left + r.width / 2),
+            y: t.top + t.height / 2 - (r.top + r.height / 2),
+            scale: t.width / r.width,
+            duration: p.grow,
+            ease: ease("in-out"),
+          },
+          "<0.1",
+        )
+        .add(() => markLoaderDone(), ">-0.15")
+        .to(el, { opacity: 0, duration: 0.6, ease: ease("out") }, "<");
+    };
+
     return () => {
       cancelled = true;
       climb.kill();
@@ -136,7 +165,7 @@ export function Loader() {
 
   return (
     <div ref={overlay} id="loader" aria-hidden className="loader fixed inset-0 z-(--z-loader) overflow-hidden">
-      <div ref={win} className="loader-window absolute top-1/2 left-1/2">
+      <div ref={win} className="loader-window absolute top-1/2 left-1/2 overflow-hidden">
         <div ref={fields} className="absolute inset-0 overflow-hidden rounded-[inherit] bg-paper-2">
           <div ref={level} className="absolute inset-0 origin-bottom bg-signature" style={{ transform: "scaleY(0)" }} />
         </div>
